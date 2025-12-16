@@ -335,4 +335,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 [⭐ Star this repo](https://github.com/Nediusman/seenaf-ctf-platform) • [🍴 Fork it](https://github.com/Nediusman/seenaf-ctf-platform/fork) • [📝 Report Issues](https://github.com/Nediusman/seenaf-ctf-platform/issues)
 
-</div>
+</div># SEENAF_CTF_CHALLENGE
