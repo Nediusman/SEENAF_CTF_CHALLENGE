@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { Flag, Zap, Lock, CheckCircle } from 'lucide-react';
+import { Flag, Zap, Lock, CheckCircle, Play } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Challenge } from '@/types/database';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +11,7 @@ interface ChallengeCardProps {
   solved?: boolean;
   onClick: () => void;
   index: number;
+  isAdmin?: boolean;
 }
 
 const difficultyConfig = {
@@ -19,8 +21,18 @@ const difficultyConfig = {
   insane: { color: 'bg-destructive/20 text-destructive border-destructive/30', label: 'Insane' },
 };
 
-export function ChallengeCard({ challenge, solved, onClick, index }: ChallengeCardProps) {
+export function ChallengeCard({ challenge, solved, onClick, index, isAdmin = false }: ChallengeCardProps) {
   const difficulty = difficultyConfig[challenge.difficulty];
+
+  const handleLaunchInstance = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the modal
+    if (challenge.instance_url) {
+      window.open(challenge.instance_url, '_blank');
+    } else {
+      // For challenges without instance URL, open the challenge modal
+      onClick();
+    }
+  };
 
   return (
     <motion.div
@@ -31,16 +43,32 @@ export function ChallengeCard({ challenge, solved, onClick, index }: ChallengeCa
       whileTap={{ scale: 0.98 }}
     >
       <Card
-        variant={solved ? "default" : "glow"}
         className={cn(
           "cursor-pointer relative overflow-hidden group",
-          solved && "border-success/30 bg-success/5"
+          solved && "border-success/30 bg-success/5",
+          !solved && "border-primary/20 hover:border-primary/40 transition-colors",
+          !challenge.is_active && isAdmin && "border-orange-500/30 bg-orange-500/5 opacity-75"
         )}
         onClick={onClick}
       >
         {solved && (
-          <div className="absolute top-3 right-3">
-            <CheckCircle className="h-5 w-5 text-success" />
+          <div className="absolute top-3 right-3 z-10">
+            <div className="flex items-center gap-1 bg-green-500 px-3 py-1 rounded-full border border-green-400 shadow-lg">
+              <CheckCircle className="h-4 w-4 text-white" />
+              <span className="text-xs font-mono text-white font-bold">SOLVED</span>
+            </div>
+          </div>
+        )}
+        
+        {solved && (
+          <div className="absolute inset-0 bg-green-500/10 pointer-events-none" />
+        )}
+
+        {!challenge.is_active && isAdmin && (
+          <div className="absolute top-3 left-3 z-10">
+            <div className="flex items-center gap-1 bg-orange-500 px-2 py-1 rounded-full border border-orange-400 shadow-lg">
+              <span className="text-xs font-mono text-white font-bold">INACTIVE</span>
+            </div>
           </div>
         )}
         
@@ -67,7 +95,7 @@ export function ChallengeCard({ challenge, solved, onClick, index }: ChallengeCa
             {challenge.description}
           </p>
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <Badge className={cn("border", difficulty.color)}>
               {difficulty.label}
             </Badge>
@@ -77,6 +105,31 @@ export function ChallengeCard({ challenge, solved, onClick, index }: ChallengeCa
               <span className="text-xs text-muted-foreground font-normal">pts</span>
             </div>
           </div>
+
+          {/* Launch Instance Button - Show for all challenges except text-based crypto */}
+          {challenge.instance_url ? (
+            <Button
+              onClick={handleLaunchInstance}
+              size="sm"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Play className="h-3 w-3 mr-2" />
+              {challenge.category === 'Forensics' || challenge.category === 'Network' || challenge.category === 'Reverse' || challenge.category === 'Pwn' || challenge.category === 'Stego' ? 'Download Files' : 
+               challenge.category === 'Web' ? 'Launch Challenge' : 'Open Tools'}
+            </Button>
+          ) : (
+            // For text-based crypto challenges, show a different button
+            challenge.category === 'Crypto' && (
+              <Button
+                onClick={onClick}
+                size="sm"
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Flag className="h-3 w-3 mr-2" />
+                Solve Challenge
+              </Button>
+            )
+          )}
         </CardContent>
       </Card>
     </motion.div>

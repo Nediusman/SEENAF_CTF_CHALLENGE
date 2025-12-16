@@ -20,6 +20,10 @@ export interface Challenge {
   flag: string;
   hints: string[] | null;
   is_active: boolean;
+  author?: string | null;
+  instance_url?: string | null;
+  solver_count?: number;
+  likes_count?: number;
   created_at: string;
   updated_at: string;
 }

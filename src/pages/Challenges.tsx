@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChallengeCard } from '@/components/challenges/ChallengeCard';
-import { SubmitFlagModal } from '@/components/challenges/SubmitFlagModal';
+import { ChallengeDetailModal } from '@/components/challenges/ChallengeDetailModal';
 import { Challenge, DifficultyLevel } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-const categories = ['All', 'Web', 'Crypto', 'Pwn', 'Reverse', 'Forensics', 'Misc'];
+const categories = ['All', 'Web', 'Crypto', 'Forensics', 'Network', 'Reverse', 'Pwn', 'OSINT', 'Stego', 'Misc'];
 const difficulties: (DifficultyLevel | 'all')[] = ['all', 'easy', 'medium', 'hard', 'insane'];
 
 export default function Challenges() {
@@ -24,7 +24,7 @@ export default function Challenges() {
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyLevel | 'all'>('all');
   const [loading, setLoading] = useState(true);
 
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, role, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,22 +34,30 @@ export default function Challenges() {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
-    if (user) {
+    if (user && !authLoading) {
       fetchChallenges();
       fetchSolvedChallenges();
     }
-  }, [user]);
+  }, [user, role, authLoading]);
 
   const fetchChallenges = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('challenges')
         .select('*')
-        .eq('is_active', true)
         .order('points', { ascending: true });
 
+      // Regular users only see active challenges, admins see all
+      if (role !== 'admin') {
+        query = query.eq('is_active', true);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
-      setChallenges((data as Challenge[]) || []);
+      
+      const challengeData = (data as Challenge[]) || [];
+      setChallenges(challengeData);
     } catch (error) {
       console.error('Error fetching challenges:', error);
     } finally {
@@ -68,7 +76,9 @@ export default function Challenges() {
         .eq('is_correct', true);
 
       if (error) throw error;
-      setSolvedIds(new Set(data?.map(s => s.challenge_id) || []));
+      
+      const solvedChallengeIds = data?.map(s => s.challenge_id) || [];
+      setSolvedIds(new Set(solvedChallengeIds));
     } catch (error) {
       console.error('Error fetching solved challenges:', error);
     }
@@ -91,7 +101,17 @@ export default function Challenges() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[80vh]">
-          <div className="text-primary font-mono animate-pulse">Loading...</div>
+          <div className="text-primary font-mono animate-pulse">Loading authentication...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <div className="text-primary font-mono animate-pulse">Loading challenges...</div>
         </div>
       </Layout>
     );
@@ -114,20 +134,37 @@ export default function Challenges() {
               <p className="text-muted-foreground">
                 Capture flags, earn points, climb the leaderboard
               </p>
+              {/* Progress bar */}
+              {challenges.length > 0 && (
+                <div className="mt-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-mono text-muted-foreground">Progress:</span>
+                    <span className="text-xs font-mono text-success font-bold">
+                      {Math.round((solvedIds.size / challenges.length) * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-48 h-2 bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-success to-primary transition-all duration-500"
+                      style={{ width: `${(solvedIds.size / challenges.length) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 border border-border">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-success/10 border border-success/30">
                 <Flag className="h-5 w-5 text-success" />
                 <span className="font-mono">
-                  <span className="text-success font-bold">{solvedIds.size}</span>
-                  <span className="text-muted-foreground">/{challenges.length}</span>
+                  <span className="text-success font-bold text-lg">{solvedIds.size}</span>
+                  <span className="text-muted-foreground">/{challenges.length} solved</span>
                 </span>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 border border-border">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/30">
                 <Trophy className="h-5 w-5 text-primary" />
                 <span className="font-mono">
-                  <span className="text-primary font-bold">{earnedPoints}</span>
+                  <span className="text-primary font-bold text-lg">{earnedPoints}</span>
                   <span className="text-muted-foreground">/{totalPoints} pts</span>
                 </span>
               </div>
@@ -176,17 +213,20 @@ export default function Challenges() {
           </div>
         </motion.div>
 
+
+
         {/* Challenge Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 rounded-xl bg-card animate-pulse" />
-            ))}
-          </div>
-        ) : filteredChallenges.length === 0 ? (
+        {filteredChallenges.length === 0 ? (
           <div className="text-center py-16">
             <Filter className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground font-mono">No challenges found</p>
+            <p className="text-muted-foreground font-mono">
+              {challenges.length === 0 ? 'No challenges in database' : 'No challenges match your filters'}
+            </p>
+            {challenges.length === 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Go to Admin panel to add challenges
+              </p>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -197,16 +237,17 @@ export default function Challenges() {
                 solved={solvedIds.has(challenge.id)}
                 onClick={() => setSelectedChallenge(challenge)}
                 index={index}
+                isAdmin={role === 'admin'}
               />
             ))}
           </div>
         )}
       </div>
 
-      {/* Submit Flag Modal */}
+      {/* Challenge Detail Modal */}
       <AnimatePresence>
         {selectedChallenge && (
-          <SubmitFlagModal
+          <ChallengeDetailModal
             challenge={selectedChallenge}
             solved={solvedIds.has(selectedChallenge.id)}
             onClose={() => setSelectedChallenge(null)}

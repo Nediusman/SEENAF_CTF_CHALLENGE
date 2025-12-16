@@ -119,26 +119,60 @@
   }
 
   .terminal-grid {
-    background-image: 
-      linear-gradient(hsl(180 100% 50% / 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(180 100% 50% / 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
+    background: 
+      radial-gradient(circle at 25% 25%, hsl(180 100% 50% / 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, hsl(280 100% 60% / 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, hsl(220 100% 60% / 0.06) 0%, transparent 70%),
+      linear-gradient(135deg, hsl(222 47% 4%) 0%, hsl(222 47% 8%) 50%, hsl(222 47% 6%) 100%),
+      linear-gradient(hsl(180 100% 50% / 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(180 100% 50% / 0.02) 1px, transparent 1px);
+    background-size: 
+      800px 800px,
+      600px 600px, 
+      1000px 1000px,
+      100% 100%,
+      60px 60px,
+      60px 60px;
+    animation: background-shift 20s ease-in-out infinite;
+  }
+
+  @keyframes background-shift {
+    0%, 100% {
+      background-position: 0% 0%, 100% 100%, 50% 50%, 0% 0%, 0% 0%, 0% 0%;
+    }
+    50% {
+      background-position: 100% 100%, 0% 0%, 25% 75%, 0% 0%, 30px 30px, 30px 30px;
+    }
   }
 
   .scanline {
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      hsl(180 100% 50% / 0.02) 50%,
-      transparent 100%
-    );
-    background-size: 100% 4px;
-    animation: scanline 8s linear infinite;
+    background: 
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        hsl(180 100% 50% / 0.03) 30%,
+        hsl(280 100% 60% / 0.02) 50%,
+        hsl(180 100% 50% / 0.03) 70%,
+        transparent 100%
+      ),
+      linear-gradient(
+        45deg,
+        transparent 0%,
+        hsl(220 100% 60% / 0.01) 50%,
+        transparent 100%
+      );
+    background-size: 100% 6px, 100% 100%;
+    animation: scanline 12s linear infinite, diagonal-sweep 8s ease-in-out infinite;
   }
 
   @keyframes scanline {
-    0% { background-position: 0 0; }
-    100% { background-position: 0 100vh; }
+    0% { background-position: 0 -100vh, 0 0; }
+    100% { background-position: 0 100vh, 0 0; }
+  }
+
+  @keyframes diagonal-sweep {
+    0%, 100% { background-position: 0 0, -100% 0; }
+    50% { background-position: 0 0, 100% 0; }
   }
 
   .typing-cursor::after {
@@ -149,6 +183,401 @@
   @keyframes blink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
+  }
+
+  .matrix-rain {
+    animation: matrix-fall 3s linear infinite;
+  }
+
+  @keyframes matrix-fall {
+    0% {
+      transform: translateY(-100vh);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh);
+      opacity: 0;
+    }
+  }
+
+  .floating-particle {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-20px) rotate(180deg);
+    }
+  }
+
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse-glow {
+    from {
+      box-shadow: 0 0 20px hsl(180 100% 50% / 0.2);
+    }
+    to {
+      box-shadow: 0 0 40px hsl(180 100% 50% / 0.4);
+    }
+  }
+
+  .gradient-text {
+    background: linear-gradient(45deg, hsl(180 100% 50%), hsl(220 100% 60%), hsl(280 100% 60%));
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px hsl(180 100% 50% / 0.15);
+  }
+
+  /* Hacking Terminal Effects */
+  .terminal-cursor::after {
+    content: '█';
+    animation: terminal-blink 1s step-end infinite;
+    color: hsl(142 76% 45%);
+  }
+
+  @keyframes terminal-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  .hacker-text {
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 10px currentColor;
+    letter-spacing: 0.5px;
+  }
+
+  .glitch-effect {
+    position: relative;
+    animation: glitch 2s infinite;
+  }
+
+  .glitch-effect::before,
+  .glitch-effect::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .glitch-effect::before {
+    animation: glitch-1 0.5s infinite;
+    color: hsl(0 100% 50%);
+    z-index: -1;
+  }
+
+  .glitch-effect::after {
+    animation: glitch-2 0.5s infinite;
+    color: hsl(240 100% 50%);
+    z-index: -2;
+  }
+
+  @keyframes glitch {
+    0%, 100% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+  }
+
+  @keyframes glitch-1 {
+    0%, 100% { transform: translate(0); }
+    10% { transform: translate(-2px, -2px); }
+    20% { transform: translate(2px, 2px); }
+    30% { transform: translate(-2px, 2px); }
+    40% { transform: translate(2px, -2px); }
+    50% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    70% { transform: translate(-2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    90% { transform: translate(-2px, -2px); }
+  }
+
+  @keyframes glitch-2 {
+    0%, 100% { transform: translate(0); }
+    10% { transform: translate(2px, 2px); }
+    20% { transform: translate(-2px, -2px); }
+    30% { transform: translate(2px, -2px); }
+    40% { transform: translate(-2px, 2px); }
+    50% { transform: translate(2px, 2px); }
+    60% { transform: translate(-2px, -2px); }
+    70% { transform: translate(2px, -2px); }
+    80% { transform: translate(-2px, 2px); }
+    90% { transform: translate(2px, 2px); }
+  }
+
+  /* Advanced Interactive Elements */
+  .live-feed {
+    background: linear-gradient(135deg, 
+      rgba(0, 0, 0, 0.8) 0%, 
+      rgba(0, 50, 0, 0.3) 50%, 
+      rgba(0, 0, 0, 0.8) 100%
+    );
+    box-shadow: 
+      0 0 20px rgba(0, 255, 0, 0.1),
+      inset 0 0 20px rgba(0, 255, 0, 0.05);
+  }
+
+  .terminal-window {
+    background: linear-gradient(135deg, 
+      rgba(0, 0, 0, 0.9) 0%, 
+      rgba(0, 20, 0, 0.8) 100%
+    );
+    box-shadow: 
+      0 0 30px rgba(0, 255, 0, 0.2),
+      inset 0 0 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .code-window {
+    background: linear-gradient(135deg, 
+      rgba(0, 0, 50, 0.3) 0%, 
+      rgba(0, 0, 0, 0.8) 100%
+    );
+    box-shadow: 
+      0 0 30px rgba(0, 100, 255, 0.2),
+      inset 0 0 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .skill-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skill-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent, 
+      rgba(255, 255, 255, 0.1), 
+      transparent
+    );
+    transition: left 0.5s;
+  }
+
+  .skill-card:hover::before {
+    left: 100%;
+  }
+
+  .leaderboard-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .leaderboard-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+      transparent 30%, 
+      rgba(255, 255, 255, 0.05) 50%, 
+      transparent 70%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+  }
+
+  .leaderboard-card:hover::after {
+    transform: translateX(100%);
+  }
+
+  /* Pulsing data stream effect */
+  .data-stream {
+    animation: data-flow 3s linear infinite;
+  }
+
+  @keyframes data-flow {
+    0% { 
+      opacity: 0.3;
+      transform: translateY(10px);
+    }
+    50% { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% { 
+      opacity: 0.3;
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Typing effect for terminal */
+  .typing-effect {
+    overflow: hidden;
+    border-right: 2px solid #00ff00;
+    white-space: nowrap;
+    animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+  }
+
+  @keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+
+  @keyframes blink-caret {
+    from, to { border-color: transparent; }
+    50% { border-color: #00ff00; }
+  }
+
+  /* Hacking Terminal Background */
+  .cyber-bg {
+    background: 
+      /* Terminal screen effect */
+      radial-gradient(ellipse at top left, hsl(142 76% 45% / 0.08) 0%, transparent 40%),
+      radial-gradient(ellipse at top right, hsl(0 100% 50% / 0.06) 0%, transparent 40%),
+      radial-gradient(ellipse at bottom left, hsl(240 100% 50% / 0.05) 0%, transparent 40%),
+      radial-gradient(ellipse at bottom right, hsl(60 100% 50% / 0.04) 0%, transparent 40%),
+      /* Terminal grid */
+      linear-gradient(hsl(142 76% 45% / 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(142 76% 45% / 0.02) 1px, transparent 1px),
+      /* CRT screen curvature effect */
+      radial-gradient(ellipse at center, transparent 0%, hsl(222 47% 2% / 0.8) 100%),
+      /* Base terminal background */
+      linear-gradient(135deg, 
+        hsl(222 47% 2%) 0%, 
+        hsl(222 47% 4%) 25%, 
+        hsl(222 47% 3%) 50%, 
+        hsl(222 47% 5%) 75%, 
+        hsl(222 47% 3%) 100%
+      );
+    background-size: 
+      1000px 600px,
+      800px 500px,
+      600px 800px,
+      500px 600px,
+      40px 40px,
+      40px 40px,
+      100% 100%,
+      100% 100%;
+    animation: terminal-flicker 30s ease-in-out infinite;
+  }
+
+  @keyframes terminal-flicker {
+    0%, 100% {
+      background-position: 
+        0% 0%, 100% 0%, 0% 100%, 100% 100%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
+      filter: brightness(1) contrast(1.1);
+    }
+    25% {
+      background-position: 
+        20% 20%, 80% 20%, 20% 80%, 80% 80%, 10px 10px, 10px 10px, 0% 0%, 0% 0%;
+      filter: brightness(1.05) contrast(1.15);
+    }
+    50% {
+      background-position: 
+        40% 40%, 60% 60%, 40% 60%, 60% 40%, 20px 20px, 20px 20px, 0% 0%, 0% 0%;
+      filter: brightness(0.98) contrast(1.2);
+    }
+    75% {
+      background-position: 
+        60% 20%, 40% 80%, 60% 20%, 40% 80%, 30px 30px, 30px 30px, 0% 0%, 0% 0%;
+      filter: brightness(1.02) contrast(1.1);
+    }
+  }
+
+  /* 3D Depth layers */
+  .depth-layer-1 {
+    background: 
+      radial-gradient(circle at 20% 80%, hsl(180 100% 50% / 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(280 100% 60% / 0.06) 0%, transparent 50%);
+    animation: depth-float-1 15s ease-in-out infinite;
+  }
+
+  .depth-layer-2 {
+    background: 
+      radial-gradient(circle at 60% 40%, hsl(220 100% 60% / 0.05) 0%, transparent 60%),
+      radial-gradient(circle at 40% 60%, hsl(320 100% 50% / 0.04) 0%, transparent 60%);
+    animation: depth-float-2 18s ease-in-out infinite reverse;
+  }
+
+  @keyframes depth-float-1 {
+    0%, 100% { transform: translateX(0) translateY(0) scale(1); }
+    33% { transform: translateX(20px) translateY(-10px) scale(1.02); }
+    66% { transform: translateX(-15px) translateY(15px) scale(0.98); }
+  }
+
+  @keyframes depth-float-2 {
+    0%, 100% { transform: translateX(0) translateY(0) scale(1); }
+    50% { transform: translateX(-25px) translateY(20px) scale(1.05); }
+  }
+
+  /* Holographic effect */
+  .holographic {
+    background: 
+      linear-gradient(45deg, transparent 30%, hsl(180 100% 50% / 0.1) 50%, transparent 70%),
+      linear-gradient(-45deg, transparent 30%, hsl(280 100% 60% / 0.08) 50%, transparent 70%);
+    background-size: 200px 200px, 150px 150px;
+    animation: hologram-shift 8s linear infinite;
+  }
+
+  @keyframes hologram-shift {
+    0% { background-position: 0% 0%, 100% 100%; }
+    50% { background-position: 100% 100%, 0% 0%; }
+    100% { background-position: 0% 0%, 100% 100%; }
+  }
+
+  /* Neural network pattern */
+  .neural-network {
+    background-image: 
+      radial-gradient(circle at 25% 25%, hsl(180 100% 50% / 0.1) 2px, transparent 2px),
+      radial-gradient(circle at 75% 25%, hsl(280 100% 60% / 0.08) 1px, transparent 1px),
+      radial-gradient(circle at 25% 75%, hsl(220 100% 60% / 0.06) 1.5px, transparent 1.5px),
+      radial-gradient(circle at 75% 75%, hsl(320 100% 50% / 0.04) 1px, transparent 1px);
+    background-size: 100px 100px, 150px 150px, 120px 120px, 80px 80px;
+    animation: neural-pulse 12s ease-in-out infinite;
+  }
+
+  @keyframes neural-pulse {
+    0%, 100% { 
+      background-size: 100px 100px, 150px 150px, 120px 120px, 80px 80px;
+      opacity: 0.6;
+    }
+    50% { 
+      background-size: 120px 120px, 180px 180px, 140px 140px, 100px 100px;
+      opacity: 1;
+    }
   }
 }
 
