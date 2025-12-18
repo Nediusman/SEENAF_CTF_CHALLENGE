@@ -111,7 +111,7 @@ We've created comprehensive documentation to help you get started on **any compu
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/yourusername/seenaf-ctf-platform.git
+git clone https://github.com/Nediusman/seenaf-ctf-platform.git
 cd seenaf-ctf-platform
 npm install
 
