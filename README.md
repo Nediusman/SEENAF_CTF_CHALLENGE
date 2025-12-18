@@ -10,7 +10,9 @@
 
 **A modern, feature-rich Capture The Flag (CTF) platform built for cybersecurity education and competitions.**
 
-[🚀 Live Demo](#) • [📖 Documentation](#features) • [🛠️ Setup Guide](#installation) • [🤝 Contributing](#contributing)
+**✨ Works on ANY computer - Windows, Mac, Linux, Docker ✨**
+
+[🚀 Start Here](START_HERE.md) • [⚡ Quick Start](QUICK_START.md) • [📖 All Docs](DOCUMENTATION_INDEX.md) • [🤝 Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -22,12 +24,28 @@ SEENAF CTF Platform is a comprehensive cybersecurity training platform designed 
 
 ### ✨ Key Highlights
 
-- 🔐 **52 Pre-built Challenges** across 9 CTF categories
+- 🔐 **68 Pre-built Challenges** across 9 CTF categories
 - 🎨 **Authentic Hacker Aesthetic** with terminal animations
 - 👑 **Advanced Admin Panel** with comprehensive management tools
 - 🏆 **Real-time Leaderboards** and scoring system
 - 🚀 **Challenge Instance Launcher** for interactive challenges
 - 📊 **Detailed Analytics** and progress tracking
+- 🌐 **Cross-Platform Setup** - Works on Windows, Mac, Linux, Docker
+- 📚 **Comprehensive Documentation** - 8+ setup guides included
+
+---
+
+## 🚀 New to This Project?
+
+**👉 Start here:** [START_HERE.md](START_HERE.md) - Choose your setup path and get running in 5-20 minutes!
+
+We've created comprehensive documentation to help you get started on **any computer**:
+
+- ⚡ **Fast Setup (5 min)**: [QUICK_START.md](QUICK_START.md)
+- 🎨 **Visual Guide (15 min)**: [VISUAL_SETUP_GUIDE.md](VISUAL_SETUP_GUIDE.md)
+- 📖 **Complete Guide (20 min)**: [SETUP_GUIDE.md](SETUP_GUIDE.md)
+- 🖥️ **Platform-Specific**: [PLATFORM_SPECIFIC_SETUP.md](PLATFORM_SPECIFIC_SETUP.md)
+- 📚 **All Documentation**: [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
 
 ---
 
@@ -85,46 +103,51 @@ SEENAF CTF Platform is a comprehensive cybersecurity training platform designed 
 ## 🚀 Installation
 
 ### Prerequisites
-- **Node.js** 18+ and npm (install with [nvm](https://github.com/nvm-sh/nvm))
-- **Supabase Account** for database hosting
+- **Node.js** 18+ and npm ([Download here](https://nodejs.org/))
+- **Supabase Account** ([Sign up free](https://supabase.com/))
 - **Git** for version control
 
-### Quick Start
+### ⚡ Quick Start (5 minutes)
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/seenaf-ctf-platform.git
-   cd seenaf-ctf-platform
-   ```
+```bash
+# 1. Clone and install
+git clone https://github.com/yourusername/seenaf-ctf-platform.git
+cd seenaf-ctf-platform
+npm install
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+# 2. Configure Supabase (automated)
+npm run setup
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your Supabase credentials
-   ```
+# 3. Verify setup
+npm run verify
 
-4. **Configure Supabase**
-   - Create a new Supabase project
-   - Run the SQL scripts in the `supabase/` directory
-   - Update `.env` with your project credentials
+# 4. Start development
+npm run dev
+```
 
-5. **Start development server**
-   ```bash
-   npm run dev
-   ```
+**Then:**
+1. Create a Supabase project at https://supabase.com/
+2. Run `complete-setup.sql` in Supabase SQL Editor
+3. Run `load-all-68-challenges.sql` to load challenges
+4. Register an account in the app
+5. Run `emergency-admin-fix-v2.sql` with your email to become admin
 
-6. **Set up admin access**
-   - Run `emergency-admin-fix-v2.sql` in Supabase SQL Editor
-   - Update the admin email in the script to your email
+### 📖 Comprehensive Documentation
+
+We've created extensive documentation to help you get started on **any computer**:
+
+- 📚 **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Complete guide to all docs
+- ⚡ **[QUICK_START.md](QUICK_START.md)** - 5-minute setup guide
+- 🎨 **[VISUAL_SETUP_GUIDE.md](VISUAL_SETUP_GUIDE.md)** - Step-by-step with visuals
+- 📖 **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Detailed instructions with troubleshooting
+- 🖥️ **[PLATFORM_SPECIFIC_SETUP.md](PLATFORM_SPECIFIC_SETUP.md)** - Windows/Mac/Linux guides
+- 📦 **[INSTALLATION_SUMMARY.md](INSTALLATION_SUMMARY.md)** - Quick reference
+- 🚀 **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Production deployment
+- 🤝 **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 
 ### Environment Variables
 
-Create a `.env` file with the following variables:
+Your `.env` file should contain:
 
 ```env
 VITE_SUPABASE_PROJECT_ID=your_project_id
@@ -132,11 +155,15 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key
 VITE_SUPABASE_URL=https://your-project.supabase.co
 ```
 
+Get these from: Supabase Dashboard → Settings → API
+
+**Need help?** See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed instructions or run `npm run verify` to check your setup.
+
 ---
 
 ## 🎯 Challenge Categories
 
-The platform includes **52 professionally crafted challenges** across these categories:
+The platform includes **68 professionally crafted challenges** across these categories:
 
 | Category | Count | Description |
 |----------|-------|-------------|
@@ -173,6 +200,12 @@ The platform includes **52 professionally crafted challenges** across these cate
 ### Available Scripts
 
 ```bash
+# Setup Supabase configuration (interactive)
+npm run setup
+
+# Verify your setup is correct
+npm run verify
+
 # Development server with hot reload
 npm run dev
 
@@ -316,16 +349,34 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 📞 Support
 
 ### Getting Help
-- 📖 Check the [documentation](#features)
-- 🐛 Report bugs via [GitHub Issues](https://github.com/yourusername/seenaf-ctf-platform/issues)
-- 💬 Join our [Discord community](#) (coming soon)
-- 📧 Email support: support@seenaf.com
+- 📖 **Quick Start**: See `QUICK_START.md` for 5-minute setup
+- 📚 **Complete Guide**: See `SETUP_GUIDE.md` for detailed instructions
+- 🖥️ **Platform-Specific**: See `PLATFORM_SPECIFIC_SETUP.md` for OS-specific help
+- 🚀 **Deployment**: See `DEPLOYMENT_CHECKLIST.md` for production deployment
+- 🐛 **Report bugs**: [GitHub Issues](https://github.com/yourusername/seenaf-ctf-platform/issues)
+- 🤝 **Contributing**: See `CONTRIBUTING.md` for contribution guidelines
 
 ### Troubleshooting
 - **Admin access issues**: Run `emergency-admin-fix-v2.sql`
 - **Database connection**: Check Supabase credentials in `.env`
 - **Build errors**: Clear `node_modules` and reinstall dependencies
+- **Setup verification**: Run `npm run verify` to check your setup
 - **Permission errors**: Use emergency admin mode in admin panel
+
+### Quick Fixes
+```bash
+# Verify your setup
+npm run verify
+
+# Reset and reinstall
+rm -rf node_modules package-lock.json
+npm cache clean --force
+npm install
+
+# Test Supabase connection
+npm run dev
+# Check browser console for connection status
+```
 
 ---
 
@@ -335,4 +386,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 [⭐ Star this repo](https://github.com/Nediusman/seenaf-ctf-platform) • [🍴 Fork it](https://github.com/Nediusman/seenaf-ctf-platform/fork) • [📝 Report Issues](https://github.com/Nediusman/seenaf-ctf-platform/issues)
 
-</div># SEENAF_CTF_CHALLENGE
+</div>

@@ -68,6 +68,8 @@ export default function Admin() {
   const [showStats, setShowStats] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [emergencyAdminMode, setEmergencyAdminMode] = useState(false);
+  const [userChallenges, setUserChallenges] = useState<any[]>([]);
+  const [loadingUserChallenges, setLoadingUserChallenges] = useState(false);
 
   const { user, role, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -517,6 +519,127 @@ export default function Admin() {
     }
   };
 
+  const handleRemoveUserFromChallenges = async (userId: string, username: string) => {
+    if (!confirm(`Remove ${username} from ALL challenges? This will delete all their submissions and reset their progress.`)) return;
+
+    try {
+      console.log('🚫 Removing user from all challenges:', { userId, username });
+      
+      // Delete all submissions for this user
+      const { data: deletedSubmissions, error: deleteError } = await supabase
+        .from('submissions')
+        .delete()
+        .eq('user_id', userId)
+        .select();
+
+      if (deleteError) {
+        console.error('❌ Delete submissions error:', deleteError);
+        throw deleteError;
+      }
+
+      // Reset their score to 0
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from('profiles')
+        .update({ total_score: 0 })
+        .eq('id', userId)
+        .select();
+
+      if (updateError) {
+        console.error('❌ Update profile error:', updateError);
+        throw updateError;
+      }
+
+      console.log('📊 User removal result:', { 
+        deletedSubmissions: deletedSubmissions?.length || 0, 
+        updatedProfile 
+      });
+
+      toast({ 
+        title: `${username} removed from all challenges`,
+        description: `Deleted ${deletedSubmissions?.length || 0} submissions and reset score to 0`
+      });
+      
+      await fetchData();
+    } catch (error: any) {
+      console.error('💥 User removal failed:', error);
+      toast({
+        title: "Failed to remove user from challenges",
+        description: error.message || "Database error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveUserFromSpecificChallenge = async (userId: string, challengeId: string, username: string, challengeTitle: string) => {
+    if (!confirm(`Remove ${username} from "${challengeTitle}"? This will delete their submission for this challenge.`)) return;
+
+    try {
+      console.log('🚫 Removing user from specific challenge:', { userId, challengeId, username, challengeTitle });
+      
+      // Delete submission for this specific challenge
+      const { data: deletedSubmission, error: deleteError } = await supabase
+        .from('submissions')
+        .delete()
+        .eq('user_id', userId)
+        .eq('challenge_id', challengeId)
+        .select();
+
+      if (deleteError) {
+        console.error('❌ Delete specific submission error:', deleteError);
+        throw deleteError;
+      }
+
+      // Recalculate user's total score
+      const { data: userSubmissions, error: fetchError } = await supabase
+        .from('submissions')
+        .select(`
+          challenge_id,
+          challenges!inner(points)
+        `)
+        .eq('user_id', userId)
+        .eq('is_correct', true);
+
+      if (fetchError) {
+        console.error('❌ Fetch user submissions error:', fetchError);
+        throw fetchError;
+      }
+
+      const newTotalScore = userSubmissions?.reduce((sum, sub: any) => sum + (sub.challenges?.points || 0), 0) || 0;
+
+      // Update user's score
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from('profiles')
+        .update({ total_score: newTotalScore })
+        .eq('id', userId)
+        .select();
+
+      if (updateError) {
+        console.error('❌ Update profile error:', updateError);
+        throw updateError;
+      }
+
+      console.log('📊 Specific challenge removal result:', { 
+        deletedSubmission: deletedSubmission?.length || 0, 
+        newTotalScore,
+        updatedProfile 
+      });
+
+      toast({ 
+        title: `${username} removed from "${challengeTitle}"`,
+        description: `Submission deleted. New score: ${newTotalScore} points`
+      });
+      
+      await fetchData();
+    } catch (error: any) {
+      console.error('💥 Specific challenge removal failed:', error);
+      toast({
+        title: "Failed to remove user from challenge",
+        description: error.message || "Database error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchStats = async () => {
     try {
       const [challengeStats, userStats, submissionStats] = await Promise.all([
@@ -551,6 +674,59 @@ export default function Admin() {
       setStats(stats);
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchUserChallenges = async () => {
+    setLoadingUserChallenges(true);
+    try {
+      // Get all users with their solved challenges
+      const { data: submissions, error } = await supabase
+        .from('submissions')
+        .select(`
+          user_id,
+          challenge_id,
+          is_correct,
+          submitted_at,
+          profiles!inner(username),
+          challenges!inner(title, points, category, difficulty)
+        `)
+        .eq('is_correct', true)
+        .order('submitted_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Group by user
+      const userChallengeMap = submissions?.reduce((acc: any, sub: any) => {
+        const userId = sub.user_id;
+        if (!acc[userId]) {
+          acc[userId] = {
+            userId,
+            username: sub.profiles?.username || 'Unknown',
+            solvedChallenges: []
+          };
+        }
+        acc[userId].solvedChallenges.push({
+          challengeId: sub.challenge_id,
+          challengeTitle: sub.challenges?.title || 'Unknown',
+          points: sub.challenges?.points || 0,
+          category: sub.challenges?.category || 'Unknown',
+          difficulty: sub.challenges?.difficulty || 'easy',
+          solvedAt: sub.submitted_at
+        });
+        return acc;
+      }, {}) || {};
+
+      setUserChallenges(Object.values(userChallengeMap));
+    } catch (error) {
+      console.error('Error fetching user challenges:', error);
+      toast({
+        title: "Failed to load user challenges",
+        description: "Could not fetch user-challenge data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingUserChallenges(false);
     }
   };
 
@@ -787,6 +963,10 @@ SELECT 'Admin setup complete' as status;`;
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
               Users ({users.length})
+            </TabsTrigger>
+            <TabsTrigger value="user-challenges" className="gap-2">
+              <Ban className="h-4 w-4" />
+              User-Challenge Management
             </TabsTrigger>
             <TabsTrigger value="stats" className="gap-2" onClick={() => !showStats && fetchStats()}>
               <BarChart3 className="h-4 w-4" />
@@ -1108,6 +1288,21 @@ SELECT 'Admin setup complete' as status;`;
           <TabsContent value="users">
             <div className="flex justify-between items-center mb-6">
               <h2 className="font-mono text-xl">User Management ({users.length})</h2>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchUserChallenges}
+                  disabled={loadingUserChallenges}
+                >
+                  {loadingUserChallenges ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Ban className="h-4 w-4 mr-2" />
+                  )}
+                  Load Challenge Data
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -1160,6 +1355,14 @@ SELECT 'Admin setup complete' as status;`;
                             >
                               <RotateCcw className="h-4 w-4 text-orange-500" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleRemoveUserFromChallenges(player.id, player.username)}
+                              title="Remove from All Challenges"
+                            >
+                              <Ban className="h-4 w-4 text-red-500" />
+                            </Button>
                           </>
                         )}
                       </div>
@@ -1168,6 +1371,103 @@ SELECT 'Admin setup complete' as status;`;
                 </motion.div>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="user-challenges">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="font-mono text-xl">User-Challenge Management</h2>
+              <Button onClick={fetchUserChallenges} variant="outline" size="sm" disabled={loadingUserChallenges}>
+                {loadingUserChallenges ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                )}
+                Load Data
+              </Button>
+            </div>
+
+            {loadingUserChallenges ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : userChallenges.length === 0 ? (
+              <div className="text-center py-12">
+                <Ban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No user-challenge data loaded. Click "Load Data" to fetch.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {userChallenges.map((userChallenge: any, index: number) => (
+                  <motion.div
+                    key={userChallenge.userId}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="flex items-center gap-2">
+                              <Users className="h-5 w-5" />
+                              {userChallenge.username}
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              {userChallenge.solvedChallenges.length} challenges solved
+                            </p>
+                          </div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleRemoveUserFromChallenges(userChallenge.userId, userChallenge.username)}
+                          >
+                            <Ban className="h-4 w-4 mr-2" />
+                            Remove from All
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {userChallenge.solvedChallenges.map((challenge: any) => (
+                            <div
+                              key={challenge.challengeId}
+                              className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border"
+                            >
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="font-mono text-sm font-semibold">{challenge.challengeTitle}</p>
+                                  <Badge variant="outline" className="text-xs">{challenge.category}</Badge>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Badge className={cn("border text-xs", difficultyConfig[challenge.difficulty]?.color)}>
+                                    {challenge.difficulty}
+                                  </Badge>
+                                  <span>{challenge.points} pts</span>
+                                  <span>{new Date(challenge.solvedAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveUserFromSpecificChallenge(
+                                  userChallenge.userId,
+                                  challenge.challengeId,
+                                  userChallenge.username,
+                                  challenge.challengeTitle
+                                )}
+                                title="Remove from this challenge"
+                              >
+                                <X className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="stats">

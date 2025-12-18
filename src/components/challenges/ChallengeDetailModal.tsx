@@ -27,7 +27,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { toast } from 'sonner';
 
 interface ChallengeDetailModalProps {
   challenge: Challenge;
@@ -150,15 +149,24 @@ export function ChallengeDetailModal({ challenge, solved, onClose, onSolved }: C
 
     try {
       const isCorrect = flag.trim() === challenge.flag;
+      
+      console.log('Submission attempt:', {
+        user_id: user.id,
+        challenge_id: challenge.id,
+        submitted_flag: flag.trim(),
+        expected_flag: challenge.flag,
+        is_correct: isCorrect
+      });
 
-      const { error } = await supabase.from('submissions').insert({
+      const { data, error } = await supabase.from('submissions').insert({
         user_id: user.id,
         challenge_id: challenge.id,
         submitted_flag: flag.trim(),
         is_correct: isCorrect,
-      });
+      }).select();
 
       if (error) {
+        console.error('Submission error:', error);
         if (error.code === '23505') {
           toast({
             title: "Already solved!",
@@ -168,6 +176,8 @@ export function ChallengeDetailModal({ challenge, solved, onClose, onSolved }: C
         }
         throw error;
       }
+      
+      console.log('Submission successful:', data);
 
       setResult(isCorrect ? 'correct' : 'incorrect');
 
@@ -181,6 +191,12 @@ export function ChallengeDetailModal({ challenge, solved, onClose, onSolved }: C
         // Immediately update local solved state and call onSolved
         setLocalSolved(true);
         onSolved();
+        
+        // Show success message with sonner toast
+        toast.success("🎉 Challenge Solved!", {
+          description: `You earned ${challenge.points} points!`,
+          duration: 5000,
+        });
         
         // Keep modal open longer to show the solved message
         setTimeout(() => {

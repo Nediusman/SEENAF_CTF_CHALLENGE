@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChallengeCard } from '@/components/challenges/ChallengeCard';
 import { ChallengeDetailModal } from '@/components/challenges/ChallengeDetailModal';
+import { SubmissionDebugger } from '@/components/SubmissionDebugger';
 import { Challenge, DifficultyLevel } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -78,6 +79,11 @@ export default function Challenges() {
       if (error) throw error;
       
       const solvedChallengeIds = data?.map(s => s.challenge_id) || [];
+      console.log('Fetched solved challenges:', {
+        user_id: user.id,
+        solved_ids: solvedChallengeIds,
+        count: solvedChallengeIds.length
+      });
       setSolvedIds(new Set(solvedChallengeIds));
     } catch (error) {
       console.error('Error fetching solved challenges:', error);
@@ -213,7 +219,12 @@ export default function Challenges() {
           </div>
         </motion.div>
 
-
+        {/* Temporary Debug Panel - Remove after testing */}
+        {role === 'admin' && (
+          <div className="mb-8">
+            <SubmissionDebugger />
+          </div>
+        )}
 
         {/* Challenge Grid */}
         {filteredChallenges.length === 0 ? (
@@ -252,6 +263,9 @@ export default function Challenges() {
             solved={solvedIds.has(selectedChallenge.id)}
             onClose={() => setSelectedChallenge(null)}
             onSolved={() => {
+              // Immediately add the challenge to solved set
+              setSolvedIds(prev => new Set([...prev, selectedChallenge.id]));
+              // Also fetch from database to ensure consistency
               fetchSolvedChallenges();
             }}
           />

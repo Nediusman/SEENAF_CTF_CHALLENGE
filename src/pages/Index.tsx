@@ -16,11 +16,12 @@ export default function Index() {
 
   const fullText = 'Elite hackers. Real challenges. Ultimate glory.';
 
-  useEffect(() => {
-    if (!loading && user) {
-      navigate('/challenges');
-    }
-  }, [user, loading, navigate]);
+  // Temporarily disabled auto-redirect to allow viewing the landing page
+  // useEffect(() => {
+  //   if (!loading && user) {
+  //     navigate('/challenges');
+  //   }
+  // }, [user, loading, navigate]);
 
   useEffect(() => {
     let i = 0;
@@ -382,7 +383,7 @@ export default function Index() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8"
           >
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-sm font-mono text-primary">SYSTEM ONLINE</span>
+            <span className="text-sm font-mono text-primary">SYSTEM ACTIVE</span>
           </motion.div>
 
           {/* Simple Logo */}
@@ -412,7 +413,7 @@ export default function Index() {
             transition={{ delay: 0.5 }}
             className="text-2xl md:text-3xl text-muted-foreground mb-4 font-mono font-light"
           >
-            {'>'} The Ultimate Hacking SEENAF_CTF
+            {'>'} The Ultimate Hacking Platform
           </motion.p>
 
           {/* Typed text */}
@@ -805,7 +806,7 @@ export default function Index() {
                 Ready to Join the Elite?
               </h2>
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-                Enter the SEENAF_CTF arena and prove your cybersecurity mastery. 
+                Enter the SEENAF_CTF and prove your cybersecurity mastery. 
                 Compete with the world's best hackers and claim your place in history.
               </p>
               

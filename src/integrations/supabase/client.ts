@@ -5,6 +5,38 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Validate environment variables
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  console.error('❌ Missing Supabase environment variables!');
+  console.error('Please check your .env file and ensure these variables are set:');
+  console.error('- VITE_SUPABASE_URL');
+  console.error('- VITE_SUPABASE_PUBLISHABLE_KEY');
+  console.error('\n📖 Setup Instructions:');
+  console.error('1. Copy .env.example to .env');
+  console.error('2. Add your Supabase credentials from https://app.supabase.com/');
+  console.error('3. Or run: npm run setup');
+  console.error('\nSee SETUP_GUIDE.md for detailed instructions.');
+  
+  throw new Error('Missing Supabase configuration. Check console for details.');
+}
+
+// Validate URL format
+try {
+  new URL(SUPABASE_URL);
+} catch (error) {
+  console.error('❌ Invalid Supabase URL format:', SUPABASE_URL);
+  console.error('Expected format: https://your-project-id.supabase.co');
+  throw new Error('Invalid VITE_SUPABASE_URL. Must be a valid URL.');
+}
+
+// Validate anon key format (should be a JWT)
+if (!SUPABASE_PUBLISHABLE_KEY.startsWith('eyJ')) {
+  console.error('❌ Invalid Supabase anon key format');
+  console.error('The key should start with "eyJ" (JWT format)');
+  console.error('Get your key from: Supabase Dashboard → Settings → API');
+  throw new Error('Invalid VITE_SUPABASE_PUBLISHABLE_KEY format.');
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
@@ -13,5 +45,33 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+    detectSessionInUrl: true,
+    storageKey: 'seenaf-ctf-auth',
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'seenaf-ctf-platform',
+    },
+  },
 });
+
+// Connection test on initialization (development only)
+if (import.meta.env.DEV) {
+  supabase
+    .from('challenges')
+    .select('count', { count: 'exact', head: true })
+    .then(({ error }) => {
+      if (error) {
+        console.warn('⚠️ Supabase connection test failed:', error.message);
+        console.warn('Make sure you have run the database setup scripts:');
+        console.warn('1. complete-setup.sql');
+        console.warn('2. load-all-68-challenges.sql');
+        console.warn('\nSee SETUP_GUIDE.md for instructions.');
+      } else {
+        console.log('✅ Supabase connected successfully');
+      }
+    })
+    .catch((err) => {
+      console.error('❌ Supabase connection error:', err.message);
+    });
+}
