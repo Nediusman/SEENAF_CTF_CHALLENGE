@@ -7,8 +7,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 export function SubmissionDebugger() {
-  const [testFlag, setTestFlag] = useState('SEENAF{base64_is_not_encryption}');
-  const [challengeTitle, setChallengeTitle] = useState('Base64 Decoding');
+  const [testFlag, setTestFlag] = useState('');
+  const [challengeTitle, setChallengeTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   

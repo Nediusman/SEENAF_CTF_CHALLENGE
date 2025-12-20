@@ -10,7 +10,7 @@ export const addTestChallenge = async () => {
       category: 'Web',
       difficulty: 'easy',
       points: 50,
-      flag: 'SEENAF{test_flag}',
+      flag: 'TEST{removed_for_security}', // Flag removed from client-side code
       hints: ['This is just a test', 'Check if the database is working'],
       is_active: true
     };

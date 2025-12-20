@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { checkEverything, addSingleChallenge } from '@/utils/simpleDebug';
 
 export function DebugChallenges() {
   const [challenges, setChallenges] = useState<any[]>([]);
@@ -38,35 +37,21 @@ export function DebugChallenges() {
     }
   };
 
-  const runFullDebug = async () => {
+  const runConnectionTest = async () => {
     setLoading(true);
     try {
-      const result = await checkEverything();
-      if (result.success) {
-        setError(`✅ All Good! User: ${result.user}, Roles: ${result.roles?.join(', ')}, Challenges: ${result.challengeCount}`);
-        fetchChallenges();
-      } else {
-        setError(`❌ Failed at ${result.step}: ${result.error}`);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const { data, error } = await supabase
+        .from('challenges')
+        .select('count', { count: 'exact', head: true });
 
-  const testInsertion = async () => {
-    setLoading(true);
-    try {
-      const result = await addSingleChallenge();
-      if (result.success) {
-        setError('✅ Single test challenge added successfully!');
-        fetchChallenges();
+      if (error) {
+        setError(`❌ Connection failed: ${error.message}`);
       } else {
-        setError(`❌ Insert failed: ${result.error}`);
+        setError('✅ Database connection successful!');
+        fetchChallenges();
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(`❌ Connection error: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -86,17 +71,14 @@ export function DebugChallenges() {
           <Button onClick={fetchChallenges} disabled={loading} size="sm">
             {loading ? 'Loading...' : 'Refresh'}
           </Button>
-          <Button onClick={runFullDebug} disabled={loading} size="sm" variant="outline">
-            Full Debug
-          </Button>
-          <Button onClick={testInsertion} disabled={loading} size="sm" variant="secondary">
-            Add Single Challenge
+          <Button onClick={runConnectionTest} disabled={loading} size="sm" variant="outline">
+            Test Connection
           </Button>
         </div>
 
         {error && (
           <div className="p-3 bg-destructive/10 border border-destructive/20 rounded text-sm">
-            <strong>Error:</strong> {error}
+            <strong>Status:</strong> {error}
           </div>
         )}
 
@@ -107,7 +89,7 @@ export function DebugChallenges() {
           
           {challenges.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-semibold">Challenges Found:</p>
+              <p className="text-sm font-semibold">Recent Challenges:</p>
               {challenges.slice(0, 3).map((challenge, index) => (
                 <div key={index} className="p-2 bg-secondary/20 rounded text-xs">
                   <div><strong>Title:</strong> {challenge.title}</div>
@@ -115,7 +97,6 @@ export function DebugChallenges() {
                   <div><strong>Points:</strong> {challenge.points}</div>
                   <div><strong>Active:</strong> {challenge.is_active ? 'Yes' : 'No'}</div>
                   <div><strong>Author:</strong> {challenge.author || 'Not set'}</div>
-                  <div><strong>Has new fields:</strong> {challenge.hasOwnProperty('solver_count') ? 'Yes' : 'No'}</div>
                 </div>
               ))}
               {challenges.length > 3 && (

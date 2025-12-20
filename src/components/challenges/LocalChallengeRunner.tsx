@@ -40,10 +40,10 @@ export function LocalChallengeRunner({ challenge, onFlagSubmit }: LocalChallenge
           <div className="bg-white text-black p-4 rounded border">
             <h1>Welcome to SEENAF CTF!</h1>
             <p>This is a simple webpage. Can you find the hidden flag?</p>
-            {/* Hidden flag in HTML comment */}
-            {/* SEENAF{1nsp3ct_th3_html_s0urc3} */}
+            {/* Hidden flag removed for security - flags should only be in database */}
+            {/* Challenge content would be loaded from server */}
             <div style={{ display: 'none' }}>
-              Flag: SEENAF{1nsp3ct_th3_html_s0urc3}
+              Flag: [REDACTED - Check database]
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2">

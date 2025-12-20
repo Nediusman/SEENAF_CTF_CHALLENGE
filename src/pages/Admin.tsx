@@ -21,7 +21,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { setupSampleChallenges, clearAllChallenges } from '@/utils/setupChallenges';
-import { loadBasicChallenges } from '@/utils/basicChallenges';
 
 const difficultyConfig = {
   easy: { color: 'bg-success/20 text-success border-success/30' },
@@ -327,24 +326,20 @@ export default function Admin() {
   };
 
   const handleLoadBasicChallenges = async () => {
-    if (!confirm('This will replace all existing challenges with 16 CTF challenges. Continue?')) return;
+    if (!confirm('This will load challenges from the database. Continue?')) return;
     
     setSetupLoading(true);
     try {
-      const result = await loadBasicChallenges();
-      if (result.success) {
-        toast({ 
-          title: "CTF challenges loaded!", 
-          description: `${result.count} challenges have been added to your database.` 
-        });
-        fetchData();
-      } else {
-        throw new Error(result.error || 'Load failed');
-      }
+      // Load challenges from database instead of hardcoded data
+      await fetchData();
+      toast({ 
+        title: "Challenges refreshed!", 
+        description: "Challenge data loaded from database." 
+      });
     } catch (error: any) {
       toast({
         title: "Load failed",
-        description: error.message || "Failed to load CTF challenges",
+        description: error.message || "Failed to load challenges",
         variant: "destructive",
       });
     } finally {
