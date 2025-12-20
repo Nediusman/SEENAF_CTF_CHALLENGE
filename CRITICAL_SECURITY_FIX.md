@@ -3,10 +3,7 @@
 ## **IMMEDIATE ACTION REQUIRED**
 
 ### **Vulnerability Found:**
-- **Hardcoded admin credentials** were exposed in the JavaScript bundle
-- **Email:** `nediusman@gmail.com` 
-- **Password:** `158595Nedi`
-- **Risk Level:** CRITICAL - Anyone could access admin panel
+- **Hardcoded admin credentials** were exposed in the JavaScript 
 
 ### **What Was Exposed:**
 1. Admin email and password in `src/controllers/AuthController.ts`
