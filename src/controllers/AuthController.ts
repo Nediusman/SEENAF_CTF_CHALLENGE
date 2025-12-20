@@ -13,45 +13,14 @@ export interface AuthResult {
 }
 
 export class AuthController {
-  // Admin credentials (hardcoded for now)
-  private static readonly ADMIN_EMAIL = 'nediusman@gmail.com';
-  private static readonly ADMIN_PASSWORD = '158595Nedi';
-  private static readonly ADMIN_USERNAME = 'NEDIUSMAN';
+  // SECURITY: Admin credentials removed - use database-only authentication
 
   // Sign in user
   static async signIn(email: string, password: string): Promise<AuthResult> {
     try {
       console.log('🔐 AuthController: Sign in attempt', { email });
 
-      // Check for hardcoded admin
-      if (email === this.ADMIN_EMAIL && password === this.ADMIN_PASSWORD) {
-        console.log('👑 Admin login detected');
-        
-        const adminUser = {
-          id: 'admin-nediusman-123',
-          email: this.ADMIN_EMAIL,
-          user_metadata: { username: this.ADMIN_USERNAME },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        } as User;
-        
-        const adminProfile = {
-          id: 'admin-nediusman-123',
-          username: this.ADMIN_USERNAME,
-          avatar_url: null,
-          total_score: 9999,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        } as Profile;
-
-        return {
-          success: true,
-          user: adminUser,
-          profile: adminProfile,
-          role: 'admin'
-        };
-      }
-
+      // SECURITY: Removed hardcoded admin bypass - use database authentication only
       // Regular Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email,

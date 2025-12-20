@@ -72,44 +72,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(profileResult.data as Profile);
       }
 
-      // Check if this is the admin email first (hardcoded for now)
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData.user?.email === 'nediusman@gmail.com') {
-        console.log('🔧 Admin email detected, setting admin role directly');
-        setRole('admin');
-        
-        // Try to create/update role in database (but don't fail if it doesn't work)
-        try {
-          await supabase
-            .from('user_roles')
-            .upsert({ user_id: userId, role: 'admin' })
-            .select();
-          console.log('✅ Admin role saved to database');
-        } catch (error) {
-          console.log('⚠️ Could not save admin role to database, but continuing with admin access');
-        }
-      } else {
-        // For non-admin users, try to get role from database
-        try {
-          let roleResult = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', userId)
-            .maybeSingle();
+      // Get role from database only - NO hardcoded admin emails
+      try {
+        let roleResult = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .maybeSingle();
 
-          console.log('👑 Role result:', roleResult);
+        console.log('👑 Role result:', roleResult);
 
-          if (roleResult.data) {
-            setRole(roleResult.data.role as AppRole);
-            console.log('✅ Role set to:', roleResult.data.role);
-          } else {
-            console.log('⚠️ No role found, defaulting to player');
-            setRole('player');
-          }
-        } catch (error) {
-          console.log('⚠️ Error fetching role, defaulting to player');
+        if (roleResult.data) {
+          setRole(roleResult.data.role as AppRole);
+          console.log('✅ Role set to:', roleResult.data.role);
+        } else {
+          console.log('⚠️ No role found, defaulting to player');
           setRole('player');
         }
+      } catch (error) {
+        console.log('⚠️ Error fetching role, defaulting to player');
+        setRole('player');
       }
     } catch (error) {
       console.error('💥 Error fetching user data:', error);

@@ -79,7 +79,7 @@ export default function Admin() {
     if (!authLoading) {
       if (!user) {
         navigate('/auth');
-      } else if (role !== 'admin' && !emergencyAdminMode && user?.email !== 'nediusman@gmail.com') {
+      } else if (role !== 'admin' && !emergencyAdminMode) {
         navigate('/challenges');
         toast({
           title: "Access denied",
@@ -132,8 +132,8 @@ export default function Admin() {
     try {
       console.log('💾 Saving challenge:', { editingId, form, user: user?.id, role, emergencyMode: emergencyAdminMode });
       
-      // Verify admin permissions first (allow emergency mode for admin email)
-      if (role !== 'admin' && !emergencyAdminMode && user?.email !== 'nediusman@gmail.com') {
+      // Verify admin permissions first
+      if (role !== 'admin' && !emergencyAdminMode) {
         throw new Error('Admin permissions required. Your current role: ' + (role || 'none'));
       }
 
@@ -256,8 +256,8 @@ export default function Admin() {
     try {
       console.log('🗑️ Deleting challenge:', { id, user: user?.id, role, emergencyMode: emergencyAdminMode });
       
-      // Verify admin permissions first (allow emergency mode for admin email)
-      if (role !== 'admin' && !emergencyAdminMode && user?.email !== 'nediusman@gmail.com') {
+      // Verify admin permissions first
+      if (role !== 'admin' && !emergencyAdminMode) {
         throw new Error('Admin permissions required. Your current role: ' + (role || 'none'));
       }
       
@@ -901,9 +901,9 @@ ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
--- Step 3: Create/update admin role
+-- Step 3: Create/update admin role (REPLACE YOUR_EMAIL with your actual email)
 INSERT INTO user_roles (user_id, role)
-SELECT id, 'admin' FROM auth.users WHERE email = 'nediusman@gmail.com'
+SELECT id, 'admin' FROM auth.users WHERE email = 'YOUR_EMAIL@example.com'
 ON CONFLICT (user_id) DO UPDATE SET role = 'admin';
 
 -- Step 4: Verify
@@ -927,17 +927,16 @@ SELECT 'Admin setup complete' as status;`;
               >
                 🚨 Emergency SQL Fix
               </Button>
-              {user?.email === 'nediusman@gmail.com' && (
-                <Button 
-                  onClick={() => {
-                    setEmergencyAdminMode(!emergencyAdminMode);
-                    toast({
-                      title: emergencyAdminMode ? "Emergency Mode Disabled" : "Emergency Mode Enabled",
-                      description: emergencyAdminMode ? "Normal role checks restored" : "Bypassing role checks for admin functions",
-                      variant: emergencyAdminMode ? "default" : "destructive"
-                    });
-                  }}
-                  size="sm" 
+              <Button 
+                onClick={() => {
+                  setEmergencyAdminMode(!emergencyAdminMode);
+                  toast({
+                    title: emergencyAdminMode ? "Emergency Mode Disabled" : "Emergency Mode Enabled",
+                    description: emergencyAdminMode ? "Normal role checks restored" : "Bypassing role checks for admin functions",
+                    variant: emergencyAdminMode ? "default" : "destructive"
+                  });
+                }}
+                size="sm" 
                   variant={emergencyAdminMode ? "destructive" : "outline"}
                 >
                   {emergencyAdminMode ? "🔓 Disable Emergency Mode" : "🔒 Enable Emergency Mode"}
@@ -947,7 +946,7 @@ SELECT 'Admin setup complete' as status;`;
             {emergencyAdminMode && (
               <div className="mt-3 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
                 <p className="text-red-400 text-sm font-bold">
-                  ⚠️ EMERGENCY ADMIN MODE ACTIVE - Role checks bypassed for nediusman@gmail.com
+                  ⚠️ EMERGENCY ADMIN MODE ACTIVE - Role checks bypassed
                 </p>
               </div>
             )}

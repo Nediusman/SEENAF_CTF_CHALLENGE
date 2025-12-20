@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Terminal, Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
+import { Terminal, Mail, Lock, User, ArrowRight, Loader2, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { SecureLogin } from '@/components/auth/SecureLogin';
+import { AuthSecurity } from '@/utils/authSecurity';
+import { InputSecurity } from '@/utils/inputSecurity';
+import { SecurityMonitor } from '@/utils/securityMonitor';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -20,11 +24,13 @@ const signupSchema = loginSchema.extend({
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [useSecureLogin, setUseSecureLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [passwordStrength, setPasswordStrength] = useState<any>(null);
   
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -61,13 +67,43 @@ export default function Auth() {
           setErrors(fieldErrors);
           return;
         }
+
+        // Additional security validation for signup
+        const emailValidation = InputSecurity.validateEmail(email);
+        if (!emailValidation) {
+          setErrors({ email: 'Invalid email format' });
+          return;
+        }
+
+        const usernameValidation = InputSecurity.validateUsername(username);
+        if (!usernameValidation.isValid) {
+          setErrors({ username: usernameValidation.errors[0] });
+          return;
+        }
+
+        const passwordValidation = AuthSecurity.validatePasswordStrength(password);
+        if (!passwordValidation.isValid) {
+          setErrors({ password: passwordValidation.errors[0] });
+          return;
+        }
       }
 
       setLoading(true);
 
       if (isLogin) {
-        const { error } = await signIn(email, password);
+        // Sanitize inputs
+        const sanitizedEmail = InputSecurity.sanitizeEmail(email);
+        const sanitizedPassword = InputSecurity.sanitizeInput(password);
+
+        const { error } = await signIn(sanitizedEmail, sanitizedPassword);
         if (error) {
+          SecurityMonitor.logSecurityEvent({
+            type: 'auth_failure',
+            severity: 'low',
+            description: 'Failed login attempt via legacy form',
+            metadata: { email: sanitizedEmail, error: error.message }
+          });
+
           toast({
             title: "Login failed",
             description: error.message || "Invalid credentials",
@@ -75,8 +111,20 @@ export default function Auth() {
           });
         }
       } else {
-        const { error } = await signUp(email, password, username);
+        // Sanitize inputs for signup
+        const sanitizedEmail = InputSecurity.sanitizeEmail(email);
+        const sanitizedUsername = InputSecurity.sanitizeInput(username);
+        const sanitizedPassword = InputSecurity.sanitizeInput(password);
+
+        const { error } = await signUp(sanitizedEmail, sanitizedPassword, sanitizedUsername);
         if (error) {
+          SecurityMonitor.logSecurityEvent({
+            type: 'signup_failure',
+            severity: 'low',
+            description: 'Failed signup attempt',
+            metadata: { email: sanitizedEmail, error: error.message }
+          });
+
           if (error.message.includes('already registered')) {
             toast({
               title: "Account exists",
@@ -91,6 +139,13 @@ export default function Auth() {
             });
           }
         } else {
+          SecurityMonitor.logSecurityEvent({
+            type: 'signup_success',
+            severity: 'low',
+            description: 'Successful account creation',
+            metadata: { email: sanitizedEmail }
+          });
+
           toast({
             title: "Welcome, hacker!",
             description: "Account created successfully.",
@@ -100,6 +155,32 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (!isLogin && value) {
+      const strength = AuthSecurity.validatePasswordStrength(value);
+      setPasswordStrength(strength);
+    } else {
+      setPasswordStrength(null);
+    }
+  };
+
+  const handleSecureLoginSuccess = () => {
+    toast({
+      title: "Welcome back!",
+      description: "Successfully logged in with enhanced security.",
+    });
+    navigate('/challenges');
+  };
+
+  const handleSecureLoginError = (error: string) => {
+    toast({
+      title: "Login failed",
+      description: error,
+      variant: "destructive",
+    });
   };
 
   return (
@@ -127,17 +208,43 @@ export default function Auth() {
           </p>
         </div>
 
-        <Card variant="glow" className="glass">
+        <Card className="glass border-primary/20 shadow-lg shadow-primary/10">
           <CardHeader>
-            <CardTitle className="text-center">
-              {isLogin ? '> LOGIN' : '> REGISTER'}
+            <CardTitle className="text-center flex items-center justify-center gap-2">
+              {isLogin && useSecureLogin && <Shield className="h-5 w-5 text-green-500" />}
+              {isLogin ? '> SECURE LOGIN' : '> REGISTER'}
             </CardTitle>
             <CardDescription className="text-center font-mono text-xs">
-              {isLogin ? 'Enter credentials to continue...' : 'Create your hacker identity...'}
+              {isLogin 
+                ? (useSecureLogin 
+                    ? 'Enhanced security authentication...' 
+                    : 'Enter credentials to continue...'
+                  )
+                : 'Create your hacker identity...'
+              }
             </CardDescription>
+            {isLogin && (
+              <div className="flex justify-center mt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setUseSecureLogin(!useSecureLogin)}
+                  className="text-xs"
+                >
+                  {useSecureLogin ? 'Use Basic Login' : 'Use Secure Login'}
+                </Button>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {isLogin && useSecureLogin ? (
+              <SecureLogin
+                onSuccess={handleSecureLoginSuccess}
+                onError={handleSecureLoginError}
+              />
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div className="space-y-2">
                   <div className="relative">
@@ -179,18 +286,42 @@ export default function Auth() {
                     type="password"
                     placeholder="Password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
                     className="pl-10"
                   />
                 </div>
                 {errors.password && (
                   <p className="text-destructive text-xs font-mono">{errors.password}</p>
                 )}
+                {!isLogin && passwordStrength && password && (
+                  <div className="text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span>Password Strength:</span>
+                      <span className={
+                        passwordStrength.score >= 4 ? 'text-green-500' :
+                        passwordStrength.score >= 3 ? 'text-yellow-500' :
+                        passwordStrength.score >= 2 ? 'text-orange-500' :
+                        'text-red-500'
+                      }>
+                        {passwordStrength.score >= 4 ? 'Strong' :
+                         passwordStrength.score >= 3 ? 'Good' :
+                         passwordStrength.score >= 2 ? 'Fair' : 'Weak'}
+                      </span>
+                    </div>
+                    {passwordStrength.errors.length > 0 && (
+                      <ul className="text-red-400 text-xs list-disc list-inside">
+                        {passwordStrength.errors.slice(0, 2).map((error: string, index: number) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
 
               <Button
                 type="submit"
-                variant="cyber"
+                variant="default"
                 className="w-full"
                 disabled={loading}
               >
@@ -204,6 +335,21 @@ export default function Auth() {
                 )}
               </Button>
             </form>
+            )}
+
+            {isLogin && useSecureLogin && (
+              <div className="mt-4 text-center">
+                <div className="text-xs text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-200 dark:border-green-800">
+                  🔒 Enhanced Security Features Active:
+                  <ul className="list-disc list-inside mt-1 text-left">
+                    <li>Account lockout protection</li>
+                    <li>Rate limiting</li>
+                    <li>Input sanitization</li>
+                    <li>Security monitoring</li>
+                  </ul>
+                </div>
+              </div>
+            )}
 
             <div className="mt-6 text-center">
               <button
