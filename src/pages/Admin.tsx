@@ -941,7 +941,6 @@ SELECT 'Admin setup complete' as status;`;
                 >
                   {emergencyAdminMode ? "🔓 Disable Emergency Mode" : "🔒 Enable Emergency Mode"}
                 </Button>
-              )}
             </div>
             {emergencyAdminMode && (
               <div className="mt-3 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">

@@ -18,7 +18,7 @@ export class InputSecurity {
     return input
       .replace(/[<>]/g, '') // Remove potential HTML
       .replace(/['"]/g, '') // Remove quotes
-      .replace(/[;--]/g, '') // Remove SQL comment patterns
+      .replace(/[;-]/g, '') // Remove SQL comment patterns
       .replace(/\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, '') // Remove SQL keywords
       .trim()
       .substring(0, 1000); // Limit length
