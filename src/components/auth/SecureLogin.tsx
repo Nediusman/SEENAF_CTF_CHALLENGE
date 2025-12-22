@@ -78,11 +78,11 @@ export function SecureLogin({ onSuccess, onError }: SecureLoginProps) {
       newErrors.push('Please enter a valid email address');
     }
 
-    // Password validation
+    // Password validation - simplified
     if (!credentials.password) {
       newErrors.push('Password is required');
-    } else if (credentials.password.length < 8) {
-      newErrors.push('Password must be at least 8 characters long');
+    } else if (credentials.password.length < 6) {
+      newErrors.push('Password must be at least 6 characters long');
     }
 
     setErrors(newErrors);

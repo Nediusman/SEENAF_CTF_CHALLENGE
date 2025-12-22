@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export class AuthSecurity {
-  // Password strength validation
+  // Password strength validation - SIMPLIFIED for user-friendly experience
   static validatePasswordStrength(password: string): {
     isValid: boolean;
     errors: string[];
@@ -10,53 +10,33 @@ export class AuthSecurity {
     const errors: string[] = [];
     let score = 0;
 
-    // Minimum length
-    if (password.length < 12) {
-      errors.push('Password must be at least 12 characters long');
+    // Minimum length - reduced to 6 characters for user convenience
+    if (password.length < 6) {
+      errors.push('Password must be at least 6 characters long');
     } else {
-      score += 1;
+      score += 5; // Give full score for meeting minimum requirement
     }
 
-    // Character variety
-    if (!/[a-z]/.test(password)) {
-      errors.push('Password must contain lowercase letters');
-    } else {
-      score += 1;
-    }
+    // Optional improvements (don't require these)
+    if (/[a-z]/.test(password)) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/\d/.test(password)) score += 1;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 1;
 
-    if (!/[A-Z]/.test(password)) {
-      errors.push('Password must contain uppercase letters');
-    } else {
-      score += 1;
-    }
-
-    if (!/\d/.test(password)) {
-      errors.push('Password must contain numbers');
-    } else {
-      score += 1;
-    }
-
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      errors.push('Password must contain special characters');
-    } else {
-      score += 1;
-    }
-
-    // Common password check
-    const commonPasswords = [
-      'password', '123456', 'qwerty', 'admin', 'letmein',
-      'welcome', 'monkey', '1234567890', 'password123'
+    // Only block extremely common passwords
+    const veryCommonPasswords = [
+      'password', '123456', 'qwerty', '123123', 'admin'
     ];
     
-    if (commonPasswords.some(common => 
-      password.toLowerCase().includes(common.toLowerCase())
+    if (veryCommonPasswords.some(common => 
+      password.toLowerCase() === common.toLowerCase()
     )) {
-      errors.push('Password contains common patterns');
-      score -= 2;
+      errors.push('Please choose a less common password');
+      score = 0;
     }
 
     return {
-      isValid: errors.length === 0 && score >= 4,
+      isValid: errors.length === 0, // Just need minimum length and not common
       errors,
       score: Math.max(0, score)
     };

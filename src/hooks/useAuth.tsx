@@ -72,7 +72,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(profileResult.data as Profile);
       }
 
-      // Get role from database only - NO hardcoded admin emails
+      // 🚨 EMERGENCY ADMIN BYPASS - Check user email first
+      const { data: userData } = await supabase.auth.getUser();
+      const userEmail = userData.user?.email;
+      
+      console.log('📧 User email:', userEmail);
+      
+      // Emergency admin access for your email
+      if (userEmail === 'nediusman@gmail.com') {
+        console.log('🚨 EMERGENCY ADMIN ACCESS GRANTED');
+        setRole('admin');
+        setLoading(false);
+        return;
+      }
+
+      // Get role from database for other users
       try {
         let roleResult = await supabase
           .from('user_roles')
