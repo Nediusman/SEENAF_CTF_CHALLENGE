@@ -390,7 +390,7 @@ Contributors will be:
 ## 📞 Questions?
 
 - 💬 **Discussions**: Use GitHub Discussions for questions
-- 📧 **Email**: contribute@seenaf.com
+- 📧 **Email**: nediusman92@gmail.com
 - 🐛 **Issues**: Use GitHub Issues for bugs
 
 ---
